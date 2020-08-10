@@ -1,0 +1,52 @@
+---
+title: "STAT 4442 Final Project"
+author: "Wayne Yandell & Sawyer Jacobson"
+date: "8/9/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# Initial Exploratory Data Analysis
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(stm)
+library(knitr)
+library(stringr)
+library(magrittr)
+covid_texts <- read.csv("metadata.csv") %>%   # Read in the data, might have to set working directory
+  tibble::as_tibble()                         # Converting to tibble so it prints out cleaner
+```
+
+```{r}
+# Papers that have "coronavirus" in the title
+covid_in_title <- covid_texts %>% 
+  filter(str_detect(tolower(title), 'coronavirus|covid'))
+
+# We'll want to use publish date most likely, however the date variable is a little messy 
+# so we'll grab the first 4 digits for the year to save the data
+
+
+covid_2020 <- covid_texts %>%
+  filter(str_detect(tolower(title), 'coronavirus|covid')) %>%
+  mutate(publish_year = str_sub(publish_time, 1, 4)) %>% 
+  filter(publish_year == "2020" & !str_detect(title, "¿") & abstract != '') %>%
+  group_by(title) %>%
+  slice(1) %>% # Remove duplicate titled papers (most likely the same paper published in multiple journals)
+  ungroup() %>%
+  filter(stri_enc_isascii(abstract)) %>%
+  rowwise() %>%
+  mutate(
+    abstract_words = sapply(strsplit(abstract, " "), length)
+  )
+
+covid_2020 %>%
+  write_csv("data/covid_2020.csv")
+
+```
+
