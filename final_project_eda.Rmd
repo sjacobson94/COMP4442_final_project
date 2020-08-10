@@ -19,18 +19,17 @@ library(stm)
 library(knitr)
 library(stringr)
 library(magrittr)
-covid_texts <- read.csv("metadata.csv") %>%   # Read in the data, might have to set working directory
+# Read in the data from the website
+covid_texts <- read.csv("https://ai2-semanticscholar-cord-19.s3-us-west-2.amazonaws.com/2020-08-08/metadata.csv") %>%   
   tibble::as_tibble()                         # Converting to tibble so it prints out cleaner
+
+
 ```
 
 ```{r}
 # Papers that have "coronavirus" in the title
-covid_in_title <- covid_texts %>% 
-  filter(str_detect(tolower(title), 'coronavirus|covid'))
-
 # We'll want to use publish date most likely, however the date variable is a little messy 
 # so we'll grab the first 4 digits for the year to save the data
-
 
 covid_2020 <- covid_texts %>%
   filter(str_detect(tolower(title), 'coronavirus|covid')) %>%
