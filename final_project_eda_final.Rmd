@@ -1,0 +1,74 @@
+---
+title: "COMP 4442 Final Project"
+author: "Wayne Yandell & Sawyer Jacobson"
+date: "8/11/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# Read the data from the csv
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(stm)
+library(knitr)
+library(stringr)
+library(magrittr)
+library(stringi)
+library(quanteda)
+library(topicmodels)
+# Read in the data from the csv
+covid_2020 <- read.csv("data/covid_2020.csv") %>%   
+  tibble::as_tibble()                       
+
+
+```
+
+
+```{r}
+covid_2020 %>%
+  filter(abstract_words >= 30) %>%
+  right_join(
+    covid_2020 %>%
+      group_by(source_x) %>%
+      dplyr::count(sort = TRUE) %>%
+      ungroup() %>%
+      slice(1:12), 
+    by = 'source_x'
+  ) %>%
+  ggplot(aes(x = abstract_words, fill = source_x)) +
+  geom_histogram(bins = 60) + 
+  labs(x = "Number of words in abstract", y = "Count", fill = "Article Source", 
+       title = "Number of words per abstract by \ntop 12 most common article sources") + 
+  theme_bw() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+
+
+```{r}
+covid_2020_short <- covid_2020 %>%
+  dplyr::select(cord_uid, abstract) %>%
+  group_by(cord_uid) %>%
+  mutate(articleID = row_number()) %>%
+  ungroup()
+
+tidy_abstracts <- covid_2020_short %>%
+  unnest_tokens(word, abstract) %>%
+  anti_join(stop_words, 
+            by = 'word')
+
+tidy_abstracts %>%
+  count(word, sort = TRUE) %>%
+  slice(1:125) %$%
+  wordcloud(word, n, colors = brewer.pal(8, "Dark2"))
+```
+
